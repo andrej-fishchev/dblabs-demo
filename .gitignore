@@ -1,0 +1,66 @@
+/.idea/
+
+# react-client
+# dependencies
+/react-client/node_modules
+/react-client/.pnp
+/react-client/.pnp.js
+/react-client/package-lock.json
+/react-client/tsconfig.json
+/react-client.iml
+
+# testing
+/react-client/coverage
+
+# production
+/react-client/build
+
+# misc
+/react-client/.DS_Store
+/react-client/.env.local
+/react-client/.env.development.local
+/react-client/.env.test.local
+/react-client/.env.production.local
+
+/react-client/yarn-debug.log*
+/react-client/yarn-error.log*
+/react-client/npm-debug.log*
+
+#web-server
+/web-server/HELP.md
+/web-server/target/
+/web-server/!.mvn/wrapper/maven-wrapper.jar
+/web-server/!**/src/main/**/target/
+/web-server/!**/src/test/**/target/
+
+### STS ###
+/web-server/.apt_generated
+/web-server/.classpath
+/web-server/.factorypath
+/web-server/.project
+/web-server/.settings
+/web-server/.springBeans
+/web-server/.sts4-cache
+
+### IntelliJ IDEA ###
+/web-server/.idea
+/web-server/*.iws
+/web-server/*.iml
+/web-server/*.ipr
+
+### NetBeans ###
+/web-server/nbproject/private/
+/web-server/nbbuild/
+/web-server/dist/
+/web-server/nbdist/
+/web-server/.nb-gradle/
+/web-server/build/
+/web-server/!**/src/main/**/build/
+/web-server/!**/src/test/**/build/
+
+### Maven ###
+/web-server/mvnw*
+/web-server/.mvn
+
+### VS Code ###
+/web-server/.vscode/
