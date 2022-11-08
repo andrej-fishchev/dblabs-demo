@@ -1,0 +1,23 @@
+package com.example.webserver.configs;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CORSConfig implements WebMvcConfigurer {
+
+    @Value(value = "${web.cors.allowed-origins}")
+    private String corsOrigins;
+
+    @Value(value = "${web.cors.allowed-methods}")
+    private String corsMethods;
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedMethods("*")
+                .allowedOrigins(corsOrigins);
+    }
+}
