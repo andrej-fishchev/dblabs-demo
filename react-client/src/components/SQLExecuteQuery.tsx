@@ -1,6 +1,6 @@
-import React from "react";
+import React, {Component} from "react";
 import {ISQLResponse} from "../models/ISQLResponse";
-import axios from 'axios';
+import axios from '../api';
 import {AxiosResponse} from "axios";
 import {Box, TextField} from "@mui/material";
 import {LoadingButton} from "@mui/lab";
@@ -14,44 +14,41 @@ interface SQLExecuteQueryProps extends ProviderContext {
 
 type SQLExecuteQueryStates = {
     loading: boolean,
-    inputData: string
+    input: string
 }
 
-class SQLExecuteQuery extends
-    React.Component<SQLExecuteQueryProps, SQLExecuteQueryStates> {
+class SQLExecuteQuery extends Component<SQLExecuteQueryProps, SQLExecuteQueryStates> {
 
-    constructor(props: SQLExecuteQueryProps, states: SQLExecuteQueryStates) {
-        super(props, states);
+    constructor(props: SQLExecuteQueryProps) {
+        super(props);
 
         this.state = {
             loading: false,
-            inputData: ""
+            input: ""
         }
     }
 
     componentDidMount() {
-        if(this.state.inputData === "")
+        if(this.state.input === "")
             return;
 
         this.setState({
             loading: true
         })
 
-        axios.post(process.env.REACT_APP_BASE_URL + '', null, {
-            params: {"query": this.state.inputData}})
-            .then((response: AxiosResponse) => response.data)
-            .then((data: ISQLResponse) => {
-
+        axios.post('/sql', null, {
+            params: {"query": this.state.input}})
+            .then((response: AxiosResponse<ISQLResponse>) => {
                 this.setState({
                     loading: false})
 
-                if(data.success) {
-                    this.props.onSQLResponse(data);
+                if(response.data.success) {
+                    this.props.onSQLResponse(response.data);
                     this.props.enqueueSnackbar('Запрос выполнен успешно', {
                         variant: 'success'})
                 }
 
-                this.handleSQLErrors(data.errors, 'error');
+                this.handleSQLErrors(response.data.errors, 'error');
             })
             .catch((reason) => {
                 this.setState({
@@ -63,21 +60,19 @@ class SQLExecuteQuery extends
     }
 
     handleSQLErrors (sqlErrors: ISQLError[], variant: VariantType)  {
-        // variant could be success, error, warning, info, or default
-
         sqlErrors.forEach((error) => {
             this.props.enqueueSnackbar(error.message, {variant});
         })
     }
 
     buttonClickHandler = () => {
-        if(this.state.inputData !== "")
+        if(this.state.input !== "")
             this.componentDidMount();
     }
 
     onDataInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({
-            inputData: event.target.value})
+            input: event.target.value})
     }
 
     onValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {

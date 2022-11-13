@@ -17,18 +17,18 @@ import {
 } from "../models/ISQLTableRow";
 
 type SQLTableProps  = {
-    sqlResponse: ISQLNormalResponse;
+    table: ISQLNormalResponse
 }
 
 type SQLTableStates = {
-    page: number;
-    rowsPerPage: number;
+    page: number,
+    rowsPerPage: number
 }
 
 export class SQLTable extends Component<SQLTableProps, SQLTableStates> {
 
-    constructor(props: SQLTableProps, states: SQLTableStates) {
-        super(props, states);
+    constructor(props: SQLTableProps) {
+        super(props);
 
         this.state = {
             page: 0,
@@ -55,10 +55,10 @@ export class SQLTable extends Component<SQLTableProps, SQLTableStates> {
                 maxHeight: '100%',
                 height: '50%'
             }}>
-                <Table stickyHeader aria-label="sticky table">
+                 <Table stickyHeader aria-label="sticky table">
                     <TableHead>
                         <TableRow>
-                            {this.props.sqlResponse.table_headers.map((header: ISQLTableHeader) => (
+                            {this.props.table.table_headers.map((header: ISQLTableHeader) => (
                                 <TableCell
                                     key={header.id}
                                     align={'center'}
@@ -70,7 +70,7 @@ export class SQLTable extends Component<SQLTableProps, SQLTableStates> {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {SQLTableRowMapListToRowItemList(this.props.sqlResponse.table_rows)
+                        {SQLTableRowMapListToRowItemList(this.props.table.table_rows)
                             .slice(this.state.page * this.state.rowsPerPage,
                                 this.state.page * this.state.rowsPerPage + this.state.rowsPerPage)
                             .map((row: ISQLTableRowItem) => {
@@ -92,7 +92,7 @@ export class SQLTable extends Component<SQLTableProps, SQLTableStates> {
             <TablePagination
                 rowsPerPageOptions={[10, 25, 100]}
                 component="div"
-                count={this.props.sqlResponse.table_rows.length}
+                count={this.props.table.table_rows.length}
                 rowsPerPage={this.state.rowsPerPage}
                 page={this.state.page}
                 onPageChange={this.handleChangePage}

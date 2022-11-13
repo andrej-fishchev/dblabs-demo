@@ -3,85 +3,88 @@ import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
 import SQLTableListItem from "./SQLTableListItem";
 import {Dns} from "@mui/icons-material";
-import axios, {AxiosResponse} from "axios";
-import {ISQLResponse, SQLResponseNormalize} from "../models/ISQLResponse";
-import {ISQLTableColumItem, ISQLTableRowItem, SQLTableRowMapListToRowItemList} from "../models/ISQLTableRow";
+import axios from "../api";
+import {ISQLNormalResponse, ISQLResponse, SQLResponseNormalize, SQLResponseNull} from "../models/ISQLResponse";
+import {ISQLTableRowItem,
+    SQLTableRowMapListToRowItemList}
+    from "../models/ISQLTableRow";
 import {ISQLError} from "../models/ISQLError";
-
+import {AxiosResponse} from "axios";
 
 type ISQLTablesListStates = {
-    items: ISQLTableRowItem[],
+    table: ISQLNormalResponse
     errors: ISQLError[],
     loading: boolean
 }
 
 type ISQLTablesListProps = {
     header: string,
-    tableType: string
+    query: string
 }
 
 export class SQLTablesList extends React.Component<ISQLTablesListProps, ISQLTablesListStates> {
 
-    emptyElement: JSX.Element =
-        <SQLTableListItem id={"empty"} icon={<Dns />} name={"Список пуст"} props={[]} />
+    constructor(props: ISQLTablesListProps) {
+        super(props);
 
-    tableListQueryTemplate: string =
-        'SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_TYPE like ';
-
-    UNSAFE_componentWillMount() {
-        this.setState({
-            items: []
-        })
+        this.state = {
+            table: SQLResponseNull,
+            errors: [],
+            loading: false
+        }
     }
 
-    componentDidMount() {
+    emptyElement: JSX.Element =
+        <SQLTableListItem
+            id={"empty"} icon={<Dns />} name={"Список пуст"} props={[]} />;
 
-        axios.post<ISQLResponse>(process.env.REACT_APP_BASE_URL + '', null, {
+    componentDidMount() {
+        axios.post('/sql', null, {
             params: {
-                "query": this.tableListQueryTemplate + "'" + this.props.tableType + "'"
+                "query": this.props.query
             }})
             .then((results: AxiosResponse<ISQLResponse>) => {
+
                 this.setState({
                     loading: false,
-                    items: SQLTableRowMapListToRowItemList(SQLResponseNormalize(results.data).table_rows),
+                    table: SQLResponseNormalize(results.data),
                     errors: results.data.errors
                 })
             })
-            .catch((reason) => this.setState({
-                loading: false
-            }));
-    }
+            .catch((reason) => {
 
-    onClickOnHeader = () => this.componentDidMount();
+                this.setState({
+                    loading: false
+                })
+            });
+
+        setTimeout(() => this.componentDidMount(), 15000);
+    }
 
     render () {
         return <List
             sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}
             subheader={
-                <ListSubheader onClick={ this.onClickOnHeader }>
+                <ListSubheader>
                     {this.props.header}
                 </ListSubheader>
             }
         >
-            {this.state.items.length === 0 && this.emptyElement}
-            <>
-            {this.state.items.map(function (elem: ISQLTableRowItem) {
-                    const list: JSX.Element[] = [];
+            {this.state.table.table_rows.length === 0 && this.emptyElement}
 
-                    elem.value.forEach((column: ISQLTableColumItem, index: number) => {
-                        if (index === 0)
-                            list.push(<SQLTableListItem
-                                id={column.id}
-                                key={column.value}
-                                icon={<Dns/>}
-                                name={column.value}
-                                props={[]}/>)
+            {SQLTableRowMapListToRowItemList(
+                this.state.table.table_rows)
+                    .map((elem: ISQLTableRowItem, index: number) => {
+                        return <SQLTableListItem
+                            id={elem.value[0].id}
+                            key={elem.value[0].value}
+                            icon={<Dns/>}
+                            name={elem.value[1].value + '.' + elem.value[0].value}
+                            props={[]}/>
+
                     })
-
-                    return list;
-                })
             }
-            </>
+
         </List>
     }
 }

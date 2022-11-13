@@ -2,13 +2,12 @@ import React, {Component} from 'react';
 import {Box, Container, Grid, Paper} from "@mui/material";
 import {styled} from '@mui/material/styles';
 import {ISQLNormalResponse, ISQLResponse, SQLResponseNormalize, SQLResponseNull} from "./models/ISQLResponse";
-import {SQLTablesList} from "./components/SQLTableList";
 import SQLExecuteQuery from "./components/SQLExecuteQuery";
 import {SQLTable} from "./components/SQLTable";
 import { SnackbarProvider } from 'notistack';
+import {SQLTablesList} from "./components/SQLTableList";
 
-
-const Item = styled(Paper)(({ theme }) => ({
+export const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
   ...theme.typography.body2,
   padding: theme.spacing(1),
@@ -18,44 +17,33 @@ const Item = styled(Paper)(({ theme }) => ({
 
 type SQLTableMenuStructure = {
   header: string,
-  tableType: string
+  query: string
 }
 
 type AppStates = {
-  data: ISQLNormalResponse
+  data: ISQLNormalResponse,
+  menus: JSX.Element[]
 }
 
-type AppProps = {
-
-}
+type AppProps = {}
 
 export default class App extends Component<AppProps, AppStates>
 {
-  constructor(props: AppProps, states: AppStates) {
-    super(props, states);
+  constructor(props: AppProps) {
+    super(props);
 
     this.state = {
-      data: SQLResponseNull
+      data: SQLResponseNull,
+      menus: this.RenderSQLTablesMenus()
     }
-  }
-
-  onSendRequest = (receivedData: ISQLResponse) => {
-    if(receivedData.table_rows === null || receivedData.table_rows.length === 0)
-      return;
-
-    this.setState({
-      data: SQLResponseNormalize(receivedData)
-    });
-  }
-
-  createResultTable(data: ISQLNormalResponse) : JSX.Element {
-    return <SQLTable sqlResponse={data} />
   }
 
   RenderSQLTablesMenus () : JSX.Element[] {
     const tablesMenuList: SQLTableMenuStructure[] = [
-      {header: "Список таблиц", tableType: "BASE TABLE"},
-      {header: "Список представлений", tableType: "VIEW"}
+      {header: "Список таблиц",         query: "SELECT TABLE_NAME, TABLE_SCHEMA FROM information_schema.TABLES WHERE TABLE_TYPE='BASE TABLE'"},
+      {header: "Список представлений",  query: "SELECT TABLE_NAME, TABLE_SCHEMA FROM information_schema.TABLES WHERE TABLE_TYPE='VIEW'"},
+      {header: "Список триггеров",      query: "SELECT TRIGGER_NAME, TRIGGER_SCHEMA FROM information_schema.TRIGGERS"},
+      {header: "Список процедур",       query: "SELECT ROUTINE_NAME, ROUTINE_SCHEMA FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_TYPE='PROCEDURE';"}
     ];
 
     const createElement = (table: SQLTableMenuStructure, index: number) => {
@@ -63,11 +51,23 @@ export default class App extends Component<AppProps, AppStates>
         marginTop: (index > 0) ? '10%' : '0',
         maxWidth: '100%'
       }}>
-        <SQLTablesList header={table.header} tableType={table.tableType} />
+        <SQLTablesList header={table.header} query={table.query} />
       </Item>
     }
 
     return tablesMenuList.map((element: SQLTableMenuStructure, index: number) => createElement(element, index))
+  }
+
+
+  onSendRequest = (receivedData: ISQLResponse) => {
+    this.setState({
+      data: SQLResponseNormalize(receivedData),
+      menus: this.RenderSQLTablesMenus()
+    });
+  }
+
+  createResultTable(data: ISQLNormalResponse) : JSX.Element {
+    return <SQLTable table={data} />
   }
 
   render () {
@@ -75,35 +75,34 @@ export default class App extends Component<AppProps, AppStates>
       flexGrow: 1,
       width: '80%',
       height: 'auto',
-      margin: ['10%', '10%', '10%', '10%']
+      margin: ['10%', '10%', '5%', '5%']
     }}>
       <Grid container item spacing={1}>
         <Grid container spacing={4}>
           <Grid item sx={{
             minWidth: '20%'
           }}>
-            {this.RenderSQLTablesMenus()}
+            { this.state.menus.length !== 0 && this.state.menus }
           </Grid>
           <Grid item sx={{
-            minWidth: '50%',
-            maxWidth: '60%'
+            minWidth: '60%',
+            maxWidth: '70%'
           }}>
             <Container fixed>
 
               <SnackbarProvider maxSnack={3} >
-                <SQLExecuteQuery
-                    onSQLResponse={this.onSendRequest} />
+                <SQLExecuteQuery onSQLResponse={this.onSendRequest} />
               </SnackbarProvider>
 
-              {this.state.data.success &&
-                  this.createResultTable(this.state.data)
+              {(this.state.data.table_rows.length !== 0)
+                  ? this.createResultTable(this.state.data)
+                  : ""
               }
-            </Container>
 
+            </Container>
           </Grid>
         </Grid>
       </Grid>
     </Box>
   }
 }
-
